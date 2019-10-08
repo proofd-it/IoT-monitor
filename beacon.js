@@ -14,7 +14,7 @@ function setUp() {
       led = !led;
       digitalWrite(LED1, !led ? 1 : 0);
     }, 200);
-    // Cancel if button pressed within the duration.
+    // Cancel if button released within 3 seconds.
     setWatch(function() {
       cancel = true;
       digitalWrite(LED1, 0);
