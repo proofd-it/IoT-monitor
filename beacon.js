@@ -1,18 +1,18 @@
 const URL = "trustlens.abdn.ac.uk/conn?n=";
 // How often to perform Bluetooth scanning.
-const scanFreq = 1 * 60000;
+const SCAN_FREQ = 1 * 60000;
 // Minimum required signal strenght in dB.
-const mindDb = -85;
-// How often record data for each phase, in miliseconds.
-const frequencies = {
-  "outside" : 10 * 60000,
-  "transport" : 20 * 60000,
-  "fridge" : 30 * 60000
+const MIN_DB = -85;
+const STATE_MAP = {
+  OUTSIDE : 0,
+  TRANSPORT : 1,
+  FRIDGE : 2
 };
-const stateMap = {
-  "outside" : 0,
-  "transport" : 1,
-  "fridge" : 2
+// How often record data for each phase, in miliseconds.
+const FREQUENCIES = {
+  0 : 10 * 60000,
+  1 : 20 * 60000,
+  2 : 30 * 60000
 };
 // ==============================
 // ONLY change ABOVE this line ^^^
@@ -31,7 +31,7 @@ function onInit() {
   // setTime();
 
   // When restarted, default to state outside.
-  state = stateMap.outside;
+  state = STATE_MAP.OUTSIDE;
 
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   setWatch(function() {
@@ -59,27 +59,28 @@ function onInit() {
 
   // Interval contiuously logging current state.
   logInterval =
-      setInterval(function() { logState(state); }, frequencies[state]);
+      setInterval(function() { logState(state); }, FREQUENCIES[state]);
 
   // Scan for nearby beacons.
   scanInterval = setInterval(function() {
     NRF.findDevices(function(devices) {
       var device = devices.pop();
-      if (device && device.rssi < mindDb) {
+      if (device && device.rssi < MIN_DB) {
         console.log("Too far away, ignoring");
         return;
       }
-      var newState = device ? stateMap[device.name] : stateMap.outside;
+      var newState =
+          device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
       if (newState != state) {
         logState(newState);
-        changeInterval(logInterval, frequencies[newState]);
+        changeInterval(logInterval, FREQUENCIES[newState]);
         state = newState;
       }
     }, {
       timeout : 1000,
       filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
-  }, scanFreq);
+  }, SCAN_FREQ);
 }
 
 function tearDown() {
