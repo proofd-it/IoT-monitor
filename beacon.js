@@ -66,6 +66,7 @@ function onInit() {
       }
       var newState = device ? device.name : "outside";
       if (newState != state) {
+        logState(newState);
         changeInterval(logInterval, frequencies[newState]);
         state = newState;
       }
