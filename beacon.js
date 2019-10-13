@@ -9,6 +9,11 @@ const frequencies = {
   "transport" : 20 * 60000,
   "fridge" : 30 * 60000
 };
+const stateMap = {
+  "outside" : 0,
+  "transport" : 1,
+  "fridge" : 2
+};
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
@@ -26,7 +31,7 @@ function onInit() {
   // setTime();
 
   // When restarted, default to state outside.
-  state = "outside";
+  state = stateMap.outside;
 
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   setWatch(function() {
@@ -64,14 +69,14 @@ function onInit() {
         console.log("Too far away, ignoring");
         return;
       }
-      var newState = device ? device.name : "outside";
+      var newState = device ? stateMap[device.name] : stateMap.outside;
       if (newState != state) {
         logState(newState);
         changeInterval(logInterval, frequencies[newState]);
         state = newState;
       }
     }, {
-      timeout : 20 * 1000,
+      timeout : 1000,
       filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
   }, scanFreq);
