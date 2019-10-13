@@ -5,15 +5,15 @@ const scanFreq = 1 * 60000;
 const mindDb = -85;
 // How often record data for each phase, in miliseconds.
 const frequencies = {
-  "outside" : 60000,
-  "transport" : 30 * 60000,
-  "fridge" : 60000
+  "outside" : 10 * 60000,
+  "transport" : 20 * 60000,
+  "fridge" : 30 * 60000
 };
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
 
-var state = "outside";
+var state;
 var scanInterval;
 var logInterval;
 
@@ -24,6 +24,9 @@ function onInit() {
 
   // Set only if reset.
   // setTime();
+
+  // When restarted, default to state outside.
+  state = "outside";
 
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   setWatch(function() {
@@ -67,7 +70,7 @@ function onInit() {
         state = newState;
       }
     }, {
-      timeout : 2000,
+      timeout : 20 * 1000,
       filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
   }, scanFreq);
@@ -76,10 +79,14 @@ function onInit() {
 function tearDown() {
   // Light blue LED for confirmation.
   digitalWrite(LED3, 1);
-  setTimeout(function() { digitalWrite(LED3, 0); }, 3000);
-  // Remove all existing logs.
-  var f = require("Storage");
-  f.eraseAll();
+  setTimeout(function() {
+    digitalWrite(LED3, 0);
+    // Remove all existing logs.
+    var f = require("Storage");
+    f.eraseAll();
+    // Restart the beacon.
+    onInit();
+  }, 3000);
 }
 
 // Logs current state to the flash storage.
@@ -107,7 +114,7 @@ function getData() {
   var f = require("Storage");
   var all = "[";
   f.list().forEach(function(name) { all += f.read(name) + ","; });
-  return all === "]" ? "{}" : all.slice(0, -1) + "]";
+  return all === "[" ? "{}" : all.slice(0, -1) + "]";
 }
 
 onInit();
