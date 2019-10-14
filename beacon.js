@@ -1,6 +1,6 @@
 const URL = "trustlens.abdn.ac.uk/conn?n=";
 // How often to perform Bluetooth scanning.
-const SCAN_FREQ = 1 * 60000;
+const SCAN_FREQ = 2 * 60000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
 const STATE_MAP = {
@@ -65,19 +65,21 @@ function onInit() {
   scanInterval = setInterval(function() {
     NRF.findDevices(function(devices) {
       var device = devices.pop();
+      var newState;
       if (device && device.rssi < MIN_DB) {
         console.log("Too far away, ignoring");
-        return;
+        newState = STATE_MAP.OUTSIDE;
+      } else {
+        newState =
+            device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
       }
-      var newState =
-          device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
       if (newState != state) {
+        state = newState;
         logState(newState);
         changeInterval(logInterval, FREQUENCIES[newState]);
-        state = newState;
       }
     }, {
-      timeout : 1000,
+      timeout : 2000,
       filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
   }, SCAN_FREQ);
@@ -117,11 +119,14 @@ function logState(s) {
   }));
 }
 
-function getData() {
+function getNames() {
   var f = require("Storage");
-  var all = "[";
-  f.list().forEach(function(name) { all += f.read(name) + ","; });
-  return all === "[" ? "{}" : all.slice(0, -1) + "]";
+  return f.list();
+}
+
+function getReading(name) {
+  var f = require("Storage");
+  return f.read(name);
 }
 
 onInit();
