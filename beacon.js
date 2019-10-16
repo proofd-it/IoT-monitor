@@ -1,6 +1,8 @@
-const URL = "trustlens.abdn.ac.uk/conn?n=";
+const URL = "https://dryja.dev/conn?n=";
 // How often to perform Bluetooth scanning.
+// const SCAN_FREQ = 10000;
 const SCAN_FREQ = 2 * 60000;
+const SECOND_SCAN = 15000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
 const STATE_MAP = {
@@ -14,6 +16,11 @@ const FREQUENCIES = {
   1 : 20 * 60000,
   2 : 30 * 60000
 };
+const MAX_TEMP = {
+  0 : 15,
+  1 : 15,
+  2 : 5
+};
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
@@ -24,6 +31,7 @@ var logInterval;
 
 function onInit() {
   var name = getSerial().substring(0, 8).toLowerCase();
+  var secondScan = false;
   NRF.setAdvertising({}, {name : name});
   NRF.nfcURL(URL + name);
 
@@ -60,9 +68,7 @@ function onInit() {
   // Interval contiuously logging current state.
   logInterval =
       setInterval(function() { logState(state); }, FREQUENCIES[state]);
-
-  // Scan for nearby beacons.
-  scanInterval = setInterval(function() {
+  var scanning = function() {
     NRF.findDevices(function(devices) {
       var device = devices.pop();
       var newState;
@@ -73,16 +79,26 @@ function onInit() {
         newState =
             device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
       }
-      if (newState != state) {
+      if (secondScan && newState != state) {
+        console.log(
+            "Change of state detected and it's a second scan. Logging change");
         state = newState;
         logState(newState);
+        secondScan = false;
         changeInterval(logInterval, FREQUENCIES[newState]);
+        changeInterval(scanInterval, SCAN_FREQ);
+      } else if (newState != state) {
+        console.log("Change of state detected, although it's the first change");
+        secondScan = true;
+        changeInterval(scanInterval, SECOND_SCAN);
       }
     }, {
-      timeout : 2000,
+      timeout : 5000,
       filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
-  }, SCAN_FREQ);
+  };
+  // Scan for nearby beacons.
+  scanInterval = setInterval(scanning, SCAN_FREQ);
 }
 
 function tearDown() {
