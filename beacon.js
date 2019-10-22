@@ -75,7 +75,8 @@ function onInit() {
     var temp = E.getTemperature();
     if (temp > MAX_TEMP[state] && pastReadings > 3) {
       // Temperature was too high for 4 times in a row
-      console.log("temp way too high for too long!");
+      console.log("temp way too high for too long, logging!");
+      logState(state, 1);
     } else if (temp > MAX_TEMP[state]) {
       // Temperature recorded was too high, although check again in the future.
       console.log("temperature too high, will check again");
@@ -84,9 +85,9 @@ function onInit() {
     } else {
       console.log("temperature is back to normal");
       pastReadings = 0;
+      logState(state, 0);
       changeInterval(logInterval, FREQUENCIES[state]);
     }
-    logState(state);
   };
   var scanning = function() {
     NRF.findDevices(function(devices) {
@@ -103,7 +104,7 @@ function onInit() {
         console.log(
             "Change of state detected and it's a second scan. Logging change");
         state = newState;
-        logState(newState);
+        logState(newState, 0);
         secondScan = false;
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
@@ -144,16 +145,18 @@ function tearDown() {
 //   "d": timestamp in seconds,
 //   "t": temperature in C,
 //   "s": state based on nearby beacons,
-//   "b": battery percentage
+//   "b": battery percentage,
+//   "a": boolean, whether it's alert
 // }
-function logState(s) {
+function logState(s, a) {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
   f.write(name, JSON.stringify({
     d : Math.ceil(getTime()),
     t : E.getTemperature(),
     s : s,
-    b : Puck.getBatteryPercentage()
+    b : Puck.getBatteryPercentage(),
+    a : a
   }));
 }
 
