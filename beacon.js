@@ -11,7 +11,7 @@ const STATE_MAP = {
   FRIDGE : 2
 };
 // How often record data for each phase, in miliseconds.
-const BASE_FREQUENCIES = {
+const FREQUENCIES = {
   0 : 10 * 60000,
   1 : 20 * 60000,
   2 : 30 * 60000
