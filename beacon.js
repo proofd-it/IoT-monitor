@@ -1,7 +1,7 @@
 const URL = "https://dryja.dev/conn?n=";
 // How often to perform Bluetooth scanning.
 // const SCAN_FREQ = 10000;
-const SCAN_FREQ = 2 * 60000;
+const SCAN_FREQ = 0.05 * 60000;
 const SECOND_SCAN = 15000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
@@ -11,11 +11,13 @@ const STATE_MAP = {
   FRIDGE : 2
 };
 // How often record data for each phase, in miliseconds.
-const FREQUENCIES = {
+const BASE_FREQUENCIES = {
   0 : 10 * 60000,
   1 : 20 * 60000,
   2 : 30 * 60000
 };
+// How often to poll once the temperatue has been spotted as too high.
+const ALERT_FREQ = 5 * 60000;
 const MAX_TEMP = {
   0 : 15,
   1 : 15,
@@ -28,8 +30,10 @@ const MAX_TEMP = {
 var state;
 var scanInterval;
 var logInterval;
+var pastReadings;
 
 function onInit() {
+  console.log("Start");
   var name = getSerial().substring(0, 8).toLowerCase();
   var secondScan = false;
   NRF.setAdvertising({}, {name : name});
@@ -38,6 +42,7 @@ function onInit() {
   // Set only if reset.
   // setTime();
 
+  pastReadings = 0;
   // When restarted, default to state outside.
   state = STATE_MAP.OUTSIDE;
 
@@ -65,9 +70,24 @@ function onInit() {
     }, 5000);
   }, BTN, {edge : "rising", debounce : 50, repeat : true});
 
-  // Interval contiuously logging current state.
-  logInterval =
-      setInterval(function() { logState(state); }, FREQUENCIES[state]);
+  var logging = function() {
+    console.log("checking temperature");
+    var temp = E.getTemperature();
+    if (temp > MAX_TEMP[state] && pastReadings > 3) {
+      // Temperature was too high for 4 times in a row
+      console.log("temp way too high for too long!");
+    } else if (temp > MAX_TEMP[state]) {
+      // Temperature recorded was too high, although check again in the future.
+      console.log("temperature too high, will check again");
+      pastReadings += 1;
+      changeInterval(logInterval, ALERT_FREQ);
+    } else {
+      console.log("temperature is back to normal");
+      pastReadings = 0;
+      changeInterval(logInterval, FREQUENCIES[state]);
+    }
+    logState(state);
+  };
   var scanning = function() {
     NRF.findDevices(function(devices) {
       var device = devices.pop();
@@ -99,6 +119,8 @@ function onInit() {
   };
   // Scan for nearby beacons.
   scanInterval = setInterval(scanning, SCAN_FREQ);
+  // Interval checking temperature.
+  logInterval = setInterval(logging, FREQUENCIES[state]);
 }
 
 function tearDown() {
