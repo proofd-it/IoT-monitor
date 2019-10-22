@@ -1,7 +1,7 @@
 const URL = "https://dryja.dev/conn?n=";
 // How often to perform Bluetooth scanning.
 // const SCAN_FREQ = 10000;
-const SCAN_FREQ = 0.05 * 60000;
+const SCAN_FREQ = 2 * 60000;
 const SECOND_SCAN = 15000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
@@ -17,7 +17,7 @@ const FREQUENCIES = {
   2 : 30 * 60000
 };
 // How often to poll once the temperatue has been spotted as too high.
-const ALERT_FREQ = 5 * 60000;
+const ALERT_FREQ = 3 * 60000;
 const MAX_TEMP = {
   0 : 15,
   1 : 15,
@@ -112,6 +112,9 @@ function onInit() {
         console.log("Change of state detected, although it's the first change");
         secondScan = true;
         changeInterval(scanInterval, SECOND_SCAN);
+      } else {
+        console.log("state unchanged");
+        secondScan = false;
       }
     }, {
       timeout : 5000,
