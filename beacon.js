@@ -13,8 +13,8 @@ const STATE_MAP = {
 // How often record data for each phase, in miliseconds.
 const FREQUENCIES = {
   0 : 10 * 60000,
-  1 : 20 * 60000,
-  2 : 30 * 60000
+  1 : 15 * 60000,
+  2 : 20 * 60000
 };
 // How often to poll once the temperatue has been spotted as too high.
 const ALERT_FREQ = 3 * 60000;
@@ -105,6 +105,7 @@ function onInit() {
             "Change of state detected and it's a second scan. Logging change");
         state = newState;
         logState(newState, 0);
+        logging();
         secondScan = false;
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
