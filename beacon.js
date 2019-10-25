@@ -105,6 +105,7 @@ function onInit() {
             "Change of state detected and it's a second scan. Logging change");
         state = newState;
         logState(newState, 0);
+        pastReadings = 0;
         logging();
         secondScan = false;
         changeInterval(logInterval, FREQUENCIES[newState]);
