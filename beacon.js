@@ -2,6 +2,7 @@ const URL = "https://dryja.dev/conn?n=";
 // How often to perform Bluetooth scanning.
 // const SCAN_FREQ = 10000;
 const SCAN_FREQ = 10 * 60000;
+const SCAN_DURATION = 3500;
 const SECOND_SCAN = 1 * 60000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
@@ -121,7 +122,7 @@ function onInit() {
         secondScan = false;
       }
     }, {
-      timeout : 5000,
+      timeout : SCAN_DURATION,
       filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
   };
