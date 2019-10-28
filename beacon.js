@@ -1,8 +1,8 @@
 const URL = "https://dryja.dev/conn?n=";
 // How often to perform Bluetooth scanning.
 // const SCAN_FREQ = 10000;
-const SCAN_FREQ = 2 * 60000;
-const SECOND_SCAN = 15000;
+const SCAN_FREQ = 10 * 60000;
+const SECOND_SCAN = 1 * 60000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
 const STATE_MAP = {
@@ -84,8 +84,10 @@ function onInit() {
       changeInterval(logInterval, ALERT_FREQ);
     } else {
       console.log("temperature is back to normal");
+      if (pastReadings > 0) {
+        logState(state, 0);
+      }
       pastReadings = 0;
-      logState(state, 0);
       changeInterval(logInterval, FREQUENCIES[state]);
     }
   };

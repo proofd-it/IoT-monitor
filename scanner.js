@@ -2,6 +2,7 @@ const SCAN_FREQ = 5 * 60000;
 
 function onInit() {
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
+  NRF.setAdvertising({}, {name : "logger"});
   setWatch(function() {
     var cancel = false;
     var led = false;
