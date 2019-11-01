@@ -1,4 +1,5 @@
 const SCAN_FREQ = 5 * 60000;
+var ow = new OneWire(D1);
 
 function onInit() {
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
@@ -48,18 +49,38 @@ function tearDown() {
 // JSON will be of following structure:
 // {
 //   "d": timestamp in seconds,
-//   "t": temperature in C,
+//   "t_sensor": temperature in C from internal sensor,
+//   "t_probe": temperature in C from external probe,
 //   "s": state based on nearby beacons,
 //   "b": battery percentage
 // }
 function logState(s) {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
+  var probe = readProbe();
+  console.log("probe temp is: " + probe);
   f.write(name, JSON.stringify({
     d : Math.ceil(getTime()),
-    t : E.getTemperature(),
+    t_sensor : E.getTemperature(),
+    t_probe : probe,
     b : Puck.getBatteryPercentage()
   }));
+}
+
+function readProbe() {
+  var t1, t2;
+  while (!t2) {
+    try {
+      var sensor = require("DS18B20").connect(ow);
+      while (!t1 || !t2) {
+        t1 = sensor.getTemp();
+        t2 = sensor.getTemp();
+      }
+    } catch (err) {
+      console.log("sensor not found, trying again");
+    }
+  }
+  return t2;
 }
 
 function getNames() {
