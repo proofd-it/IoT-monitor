@@ -1,4 +1,4 @@
-const URL = "https://dryja.dev/conn?n=";
+const URL = "https://proofd-it.github.io/webapp/conn.html?n=";
 // How often to perform Bluetooth scanning.
 // const SCAN_FREQ = 10000;
 const SCAN_FREQ = 10 * 60000;
