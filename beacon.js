@@ -225,7 +225,7 @@ function getAll() {
           {y : reading.t, t : (new Date(reading.d * 1000)).toString()});
     }
   }
-  //console.log(all);
+  // console.log(all);
   return JSON.stringify(all);
 }
 
