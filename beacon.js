@@ -12,7 +12,7 @@ const STATE_MAP = {
   FRIDGE : 2
 };
 const HUMAN_STATE = {
-  0 : "outisde",
+  0 : "outside",
   1 : "transport",
   2 : "fridge"
 };
@@ -212,21 +212,21 @@ function getAll() {
       currentState = HUMAN_STATE[reading.s];
       all.push({
         state : currentState,
-        timeStart : currentState ? new Date(reading.d * 1000)
-                                 : new Date(startTime * 1000),
-        timeEnd : new Date(reading.d * 1000),
+        timeStart : currentState ? (new Date(reading.d * 1000)).toString()
+                                 : (new Date(startTime * 1000)).toString(),
+        timeEnd : (new Date(reading.d * 1000)).toString(),
         assessment : !reading.a ? "ok" : "not ok",
-        data : [ {y : reading.t, t : new Date(reading.d * 1000)} ]
+        data : [ {y : reading.t, t : (new Date(reading.d * 1000)).toString()} ]
       });
     } else {
-      all[all.length - 1].timeEnd = new Date(reading.d * 1000);
+      all[all.length - 1].timeEnd = (new Date(reading.d * 1000)).toString();
       all[all.length - 1].assessment = !reading.a ? "ok" : "not ok";
       all[all.length - 1].data.push(
-          {y : reading.t, t : new Date(reading.d * 1000)});
+          {y : reading.t, t : (new Date(reading.d * 1000)).toString()});
     }
   }
-  console.log(all);
-  return all;
+  //console.log(all);
+  return JSON.stringify(all);
 }
 
 onInit();
