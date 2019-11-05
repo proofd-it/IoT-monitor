@@ -1,4 +1,4 @@
-const URL = "https://proofd-it.github.io/webapp/conn.html?n=";
+const URL = "https://proofd-it.github.io/webapp/page.html?n=";
 // How often to perform Bluetooth scanning.
 // const SCAN_FREQ = 10000;
 const SCAN_FREQ = 10 * 60000;
@@ -11,14 +11,21 @@ const STATE_MAP = {
   TRANSPORT : 1,
   FRIDGE : 2
 };
+const HUMAN_STATE = {
+  0 : "outisde",
+  1 : "transport",
+  2 : "fridge"
+};
 // How often record data for each phase, in miliseconds.
 const FREQUENCIES = {
+  // 0 : 10000,
   0 : 10 * 60000,
   1 : 15 * 60000,
   2 : 20 * 60000
 };
 // How often to poll once the temperatue has been spotted as too high.
 const ALERT_FREQ = 3 * 60000;
+// const ALERT_FREQ = 10000;
 const MAX_TEMP = {
   0 : 15,
   1 : 15,
@@ -32,6 +39,11 @@ var state;
 var scanInterval;
 var logInterval;
 var pastReadings;
+var startTime;
+
+var max_t = -100;
+var min_t = 100;
+var rollingAverage = 0;
 
 function onInit() {
   console.log("Start");
@@ -39,6 +51,7 @@ function onInit() {
   var secondScan = false;
   NRF.setAdvertising({}, {name : name});
   NRF.nfcURL(URL + name);
+  startTime = Math.ceil(getTime());
 
   // Set only if reset.
   // setTime();
@@ -74,20 +87,21 @@ function onInit() {
   var logging = function() {
     console.log("checking temperature");
     var temp = E.getTemperature();
+    max_t = Math.max(max_t, temp);
+    min_t = Math.min(min_t, temp);
+    rollingAverage = rollingAverage ? (rollingAverage + temp) / 2 : temp;
     if (temp > MAX_TEMP[state] && pastReadings > 3) {
       // Temperature was too high for 4 times in a row
       console.log("temp way too high for too long, logging!");
-      logState(state, 1);
+      logState(state, 1, max_t, min_t, rollingAverage);
     } else if (temp > MAX_TEMP[state]) {
       // Temperature recorded was too high, although check again in the future.
       console.log("temperature too high, will check again");
       pastReadings += 1;
       changeInterval(logInterval, ALERT_FREQ);
-    } else {
+    } else if (pastReadings > 0) {
       console.log("temperature is back to normal");
-      if (pastReadings > 0) {
-        logState(state, 0);
-      }
+      logState(state, 0, max_t, min_t, rollingAverage);
       pastReadings = 0;
       changeInterval(logInterval, FREQUENCIES[state]);
     }
@@ -110,6 +124,9 @@ function onInit() {
         logState(newState, 0);
         pastReadings = 0;
         logging();
+        max_t = -100;
+        min_t = 100;
+        rollingAverage = 0;
         secondScan = false;
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
@@ -154,9 +171,12 @@ function tearDown() {
 //   "t": temperature in C,
 //   "s": state based on nearby beacons,
 //   "b": battery percentage,
+//   "min": minimum temperature recorded in given state so far,
+//   "max": maximum temperature recorded in given state so far,
+//   "avg": rolling average temperature recorded in given state so far,
 //   "a": boolean, whether it's alert
 // }
-function logState(s, a) {
+function logState(s, a, max, min, avg) {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
   f.write(name, JSON.stringify({
@@ -164,6 +184,9 @@ function logState(s, a) {
     t : E.getTemperature(),
     s : s,
     b : Puck.getBatteryPercentage(),
+    min : min,
+    max : max,
+    avg : avg,
     a : a
   }));
 }
@@ -176,6 +199,34 @@ function getNames() {
 function getReading(name) {
   var f = require("Storage");
   return f.read(name);
+}
+
+function getAll() {
+  var all = [];
+  var names = getNames();
+  var currentState;
+  for (var i = 0; i < names.length; i++) {
+    var reading = JSON.parse(getReading(names[i]));
+
+    if (HUMAN_STATE[reading.s] != currentState) {
+      currentState = HUMAN_STATE[reading.s];
+      all.push({
+        state : currentState,
+        timeStart : currentState ? new Date(reading.d * 1000)
+                                 : new Date(startTime * 1000),
+        timeEnd : new Date(reading.d * 1000),
+        assessment : !reading.a ? "ok" : "not ok",
+        data : [ {y : reading.t, t : new Date(reading.d * 1000)} ]
+      });
+    } else {
+      all[all.length - 1].timeEnd = new Date(reading.d * 1000);
+      all[all.length - 1].assessment = !reading.a ? "ok" : "not ok";
+      all[all.length - 1].data.push(
+          {y : reading.t, t : new Date(reading.d * 1000)});
+    }
+  }
+  console.log(all);
+  return all;
 }
 
 onInit();
