@@ -164,6 +164,7 @@ function tearDown() {
     var f = require("Storage");
     f.eraseAll();
     // Restart the beacon.
+    firstRun = true;
     onInit();
   }, 3000);
 }
