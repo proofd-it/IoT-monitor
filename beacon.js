@@ -24,7 +24,7 @@ const FREQUENCIES = {
   2 : 20 * 60000
 };
 // How often to poll once the temperatue has been spotted as too high.
-const ALERT_FREQ = 3 * 60000;
+const ALERT_FREQ = 5 * 60000;
 // const ALERT_FREQ = 10000;
 const MAX_TEMP = {
   0 : 15,
@@ -201,31 +201,35 @@ function getReading(name) {
   return f.read(name);
 }
 
+function getDate(seconds) {
+  var str = (new Date(seconds * 1000)).toString();
+  return str.substring(0, str.length - 9);
+}
+
 function getAll() {
   var all = [];
   var names = getNames();
   var currentState;
   for (var i = 0; i < names.length; i++) {
     var reading = JSON.parse(getReading(names[i]));
+    var dateString = getDate(reading.d);
 
     if (HUMAN_STATE[reading.s] != currentState) {
       currentState = HUMAN_STATE[reading.s];
       all.push({
         state : currentState,
-        timeStart : currentState ? (new Date(reading.d * 1000)).toString()
-                                 : (new Date(startTime * 1000)).toString(),
-        timeEnd : (new Date(reading.d * 1000)).toString(),
+        timeStart : currentState ? dateString : getDate(startTime),
+        timeEnd : getDate(reading.d),
         assessment : !reading.a ? "ok" : "not ok",
-        data : [ {y : reading.t, t : (new Date(reading.d * 1000)).toString()} ]
+        data : [ {y : reading.t, t : dateString} ]
       });
     } else {
-      all[all.length - 1].timeEnd = (new Date(reading.d * 1000)).toString();
+      all[all.length - 1].timeEnd = dateString;
       all[all.length - 1].assessment = !reading.a ? "ok" : "not ok";
-      all[all.length - 1].data.push(
-          {y : reading.t, t : (new Date(reading.d * 1000)).toString()});
+      all[all.length - 1].data.push({y : reading.t, t : dateString});
     }
   }
-  // console.log(all);
+  all[all.length - 1].timeEnd = getDate(Math.ceil(getTime()));
   return JSON.stringify(all);
 }
 
