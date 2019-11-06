@@ -40,25 +40,31 @@ var scanInterval;
 var logInterval;
 var pastReadings;
 var startTime;
+var firstRun = true;
 
 var max_t = -100;
 var min_t = 100;
 var rollingAverage = 0;
 
 function onInit() {
+  var name;
+  var secondScan;
+  if (firstRun) {
+    console.log("First time");
+    name = getSerial().substring(0, 8).toLowerCase();
+    secondScan = false;
+    NRF.setAdvertising({}, {name : name});
+    NRF.nfcURL(URL + name);
+    startTime = Math.ceil(getTime());
+    // Set only if reset.
+    // setTime();
+    pastReadings = 0;
+    // When restarted, default to state outside.
+    state = STATE_MAP.OUTSIDE;
+    firstRun = false;
+  }
   console.log("Start");
-  var name = getSerial().substring(0, 8).toLowerCase();
-  var secondScan = false;
-  NRF.setAdvertising({}, {name : name});
-  NRF.nfcURL(URL + name);
-  startTime = Math.ceil(getTime());
-
-  // Set only if reset.
-  // setTime();
-
-  pastReadings = 0;
-  // When restarted, default to state outside.
-  state = STATE_MAP.OUTSIDE;
+  clearInterval();
 
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   setWatch(function() {
