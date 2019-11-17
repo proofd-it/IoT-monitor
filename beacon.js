@@ -31,6 +31,14 @@ const MAX_TEMP = {
   1 : 15,
   2 : 5
 };
+// WARNING THERSHOLDS
+// Durations specified in seconds
+// Maximum allowed time outside at one time.
+const MAX_TOTAL_OUTSIDE_DURATION = 3600; // 1 hour
+// Maximum allowed number of times the item can be outside.
+const MAX_TOTAL_OUTSIDE_TIMES = 3;
+// Maximum cumulative allowed time outside
+const MAX_CUMULATIVE_OUTSIDE = 18000; // 5 hours
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
@@ -214,7 +222,7 @@ function getDate(seconds) {
 }
 
 function getAll() {
-  var all = [];
+  var all = {"states" : []};
   var names = getNames();
   var currentState;
   for (var i = 0; i < names.length; i++) {
@@ -223,7 +231,7 @@ function getAll() {
 
     if (HUMAN_STATE[reading.s] != currentState) {
       currentState = HUMAN_STATE[reading.s];
-      all.push({
+      all.states.push({
         state : currentState,
         timeStart : currentState ? dateString : getDate(startTime),
         timeEnd : getDate(reading.d),
@@ -231,12 +239,40 @@ function getAll() {
         data : [ {y : reading.t, t : dateString} ]
       });
     } else {
-      all[all.length - 1].timeEnd = dateString;
-      all[all.length - 1].assessment = !reading.a ? "ok" : "not ok";
-      all[all.length - 1].data.push({y : reading.t, t : dateString});
+      all.states[all.states.length - 1].timeEnd = dateString;
+      all.states[all.states.length - 1].assessment =
+          !reading.a ? "ok" : "not ok";
+      all.states[all.states.length - 1].data.push(
+          {y : reading.t, t : dateString});
     }
   }
-  all[all.length - 1].timeEnd = getDate(Math.ceil(getTime()));
+  all.states[all.states.length - 1].timeEnd = getDate(Math.ceil(getTime()));
+
+  var totalOutsideDuration = 0;
+  var maxOutside = 0;
+  var totalOutside = 0;
+  all.states.forEach(function(item) {
+    if (item.currentState == "outside") {
+      var duration = (new Date(item.timeEnd) - new Date(item.timeStart)) / 1000;
+      totalOutsideDuration += duration;
+      maxOutside = Math.max(maxOutside, duration);
+      totalOutside += 1;
+    }
+  });
+
+  if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
+    all.warning = "Item has been left outside at one stage for over " +
+                  MAX_TOTAL_OUTSIDE_DURATION + " second";
+  }
+  if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
+    all.warning = "Item has been brought outside for over " +
+                  MAX_TOTAL_OUTSIDE_TIMES + " times!";
+  }
+  if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
+    a.warning = "Item has been outside in total for more than " +
+                MAX_CUMULATIVE_OUTSIDE + " seconds!";
+  }
+
   return JSON.stringify(all);
 }
 
