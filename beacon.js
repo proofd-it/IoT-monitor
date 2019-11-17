@@ -269,8 +269,8 @@ function getAll() {
                   MAX_TOTAL_OUTSIDE_TIMES + " times!";
   }
   if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
-    a.warning = "Item has been outside in total for more than " +
-                MAX_CUMULATIVE_OUTSIDE + " seconds!";
+    all.warning = "Item has been outside in total for more than " +
+                  MAX_CUMULATIVE_OUTSIDE + " seconds!";
   }
 
   return JSON.stringify(all);
