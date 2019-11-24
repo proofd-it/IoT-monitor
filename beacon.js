@@ -3,6 +3,7 @@ const URL = "https://proofd-it.github.io/webapp/page.html?n=";
 // const SCAN_FREQ = 10000;
 const SCAN_FREQ = 10 * 60000;
 const SCAN_DURATION = 3500;
+// const SECOND_SCAN = 10000;
 const SECOND_SCAN = 1 * 60000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
@@ -272,6 +273,7 @@ function getAll() {
     all.warning = "Item has been outside in total for more than " +
                   MAX_CUMULATIVE_OUTSIDE + " seconds!";
   }
+  all.puckID = getSerial().substring(0, 8).toLowerCase();
 
   return JSON.stringify(all);
 }
