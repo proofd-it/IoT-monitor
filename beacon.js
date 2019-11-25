@@ -224,12 +224,11 @@ function getDate(seconds) {
 
 function getAll() {
   var all = {"states" : []};
-  var names = getNames();
+  var names = getNames().sort();
   var currentState;
   for (var i = 0; i < names.length; i++) {
     var reading = JSON.parse(getReading(names[i]));
     var dateString = getDate(reading.d);
-
     if (HUMAN_STATE[reading.s] != currentState) {
       currentState = HUMAN_STATE[reading.s];
       all.states.push({
