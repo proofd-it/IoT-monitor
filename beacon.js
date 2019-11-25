@@ -235,12 +235,10 @@ function getAll() {
       all.states.push({
         state : currentState,
         timeStart : currentState ? dateString : getDate(startTime),
-        timeEnd : getDate(reading.d),
         assessment : !reading.a ? "ok" : "not ok",
         data : [ {y : reading.t, t : dateString} ]
       });
     } else {
-      all.states[all.states.length - 1].timeEnd = dateString;
       all.states[all.states.length - 1].assessment =
           !reading.a ? "ok" : "not ok";
       all.states[all.states.length - 1].data.push(
@@ -252,6 +250,9 @@ function getAll() {
   var totalOutsideDuration = 0;
   var maxOutside = 0;
   var totalOutside = 0;
+  for(i=0;i<all.states.length-1;i++) {
+    all.states[i].timeEnd = all.states[i+1].timeStart;
+  }
   all.states.forEach(function(item) {
     if (item.currentState == "outside") {
       var duration = (new Date(item.timeEnd) - new Date(item.timeStart)) / 1000;
