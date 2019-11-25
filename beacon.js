@@ -235,6 +235,7 @@ function getAll() {
       all.states.push({
         state : currentState,
         timeStart : currentState ? dateString : getDate(startTime),
+        timeStartSeconds : currentState ? reading.d : startTime,
         assessment : !reading.a ? "ok" : "not ok",
         data : [ {y : reading.t, t : dateString} ]
       });
@@ -250,17 +251,21 @@ function getAll() {
   var totalOutsideDuration = 0;
   var maxOutside = 0;
   var totalOutside = 0;
-  for(i=0;i<all.states.length-1;i++) {
-    all.states[i].timeEnd = all.states[i+1].timeStart;
-  }
-  all.states.forEach(function(item) {
-    if (item.currentState == "outside") {
-      var duration = (new Date(item.timeEnd) - new Date(item.timeStart)) / 1000;
+  for(i=0;i<all.states.length;i++) {
+    var duration;
+    if(i<all.states[i].length-1) {
+      all.states[i].timeEnd = all.states[i+1].timeStart;
+      duration = all.states[i+1].timeStartSeconds - all.states[i].timeStartSeconds;
+    } else {
+      duration = getTime() - all.states[i].timeStartSeconds;
+    }
+    if (all.states[i].state == "outside") {
+      duration = Math.ceil(duration);
       totalOutsideDuration += duration;
       maxOutside = Math.max(maxOutside, duration);
       totalOutside += 1;
     }
-  });
+  }
 
   if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
     all.warning = "Item has been left outside at one stage for over " +
@@ -275,7 +280,6 @@ function getAll() {
                   MAX_CUMULATIVE_OUTSIDE + " seconds!";
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
-
   return JSON.stringify(all);
 }
 
