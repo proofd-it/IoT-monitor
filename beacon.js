@@ -25,7 +25,7 @@ const FREQUENCIES = {
   2 : 20 * 60000
 };
 // How often to poll once the temperatue has been spotted as too high.
-const ALERT_FREQ = 5 * 60000;
+const ALERT_FREQ = 10 * 60000;
 // const ALERT_FREQ = 10000;
 const MAX_TEMP = {
   0 : 15,
@@ -251,11 +251,12 @@ function getAll() {
   var totalOutsideDuration = 0;
   var maxOutside = 0;
   var totalOutside = 0;
-  for(i=0;i<all.states.length;i++) {
+  for (i = 0; i < all.states.length; i++) {
     var duration;
-    if(i<all.states[i].length-1) {
-      all.states[i].timeEnd = all.states[i+1].timeStart;
-      duration = all.states[i+1].timeStartSeconds - all.states[i].timeStartSeconds;
+    if (i < all.states.length - 1) {
+      all.states[i].timeEnd = all.states[i + 1].timeStart;
+      duration =
+          all.states[i + 1].timeStartSeconds - all.states[i].timeStartSeconds;
     } else {
       duration = getTime() - all.states[i].timeStartSeconds;
     }
@@ -265,6 +266,7 @@ function getAll() {
       maxOutside = Math.max(maxOutside, duration);
       totalOutside += 1;
     }
+    delete all.states[i].timeStartSeconds;
   }
 
   if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
