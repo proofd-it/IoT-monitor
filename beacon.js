@@ -270,7 +270,7 @@ function getAll() {
 
   if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
     all.warning = "Item has been left outside at one stage for over " +
-                  MAX_TOTAL_OUTSIDE_DURATION + " second";
+                  MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes";
   }
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
     all.warning = "Item has been brought outside for over " +
@@ -278,7 +278,7 @@ function getAll() {
   }
   if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
     all.warning = "Item has been outside in total for more than " +
-                  MAX_CUMULATIVE_OUTSIDE + " seconds!";
+                  MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!";
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
