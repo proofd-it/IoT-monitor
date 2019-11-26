@@ -1,10 +1,25 @@
+// Set to true to use shorter threshold suitable for testing.
+const DEV_MODE = false;
+// Whether to use probe or internal sensor to get ambient temperature.
+const USE_PROBE = false;
+
+if (DEV_MODE) {
+  const SCAN_FREQ = 10000;
+  const SECOND_SCAN = 10000;
+  const FREQUENCIES = {0 : 10000, 1 : 10000, 2 : 10000};
+  const ALERT_FREQ = 10000;
+} else {
+  // How often to perform Bluetooth scanning.
+  const SCAN_FREQ = 10 * 60000;
+  const SECOND_SCAN = 1 * 60000;
+  // How often record data for each phase, in miliseconds.
+  const FREQUENCIES = {0 : 10 * 60000, 1 : 15 * 60000, 2 : 20 * 60000};
+  const ALERT_FREQ = 10 * 60000;
+}
+
 const URL = "https://proofd-it.github.io/webapp/page.html?n=";
-// How often to perform Bluetooth scanning.
-// const SCAN_FREQ = 10000;
 const SCAN_FREQ = 10 * 60000;
 const SCAN_DURATION = 3500;
-// const SECOND_SCAN = 10000;
-const SECOND_SCAN = 1 * 60000;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
 const STATE_MAP = {
@@ -17,16 +32,7 @@ const HUMAN_STATE = {
   1 : "transport",
   2 : "fridge"
 };
-// How often record data for each phase, in miliseconds.
-const FREQUENCIES = {
-  // 0 : 10000,
-  0 : 10 * 60000,
-  1 : 15 * 60000,
-  2 : 20 * 60000
-};
 // How often to poll once the temperatue has been spotted as too high.
-const ALERT_FREQ = 10 * 60000;
-// const ALERT_FREQ = 10000;
 const MAX_TEMP = {
   0 : 15,
   1 : 15,
@@ -56,6 +62,23 @@ var firstRun = true;
 var max_t = -100;
 var min_t = 100;
 var rollingAverage = 0;
+
+function readProbe() {
+  var t1, t2;
+  while (!t2) {
+    try {
+      var ow = new OneWire(D1);
+      var sensor = require("DS18B20").connect(ow);
+      while (!t1 || !t2) {
+        t1 = sensor.getTemp();
+        t2 = sensor.getTemp();
+      }
+    } catch (err) {
+      console.log("sensor not found, trying again");
+    }
+  }
+  return t2;
+}
 
 function onInit() {
   var name;
@@ -103,7 +126,12 @@ function onInit() {
 
   var logging = function() {
     console.log("checking temperature");
-    var temp = E.getTemperature() + TEMP_OFFSET;
+    var temp;
+    if (USE_PROBE) {
+      temp = readProbe() + TEMP_OFFSET;
+    } else {
+      temp = E.getTemperature() + TEMP_OFFSET;
+    }
     max_t = Math.max(max_t, temp);
     min_t = Math.min(min_t, temp);
     rollingAverage = rollingAverage ? (rollingAverage + temp) / 2 : temp;
