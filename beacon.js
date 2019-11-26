@@ -32,6 +32,8 @@ const MAX_TEMP = {
   1 : 15,
   2 : 5
 };
+// Offset for temperature
+const TEMP_OFFSET = 0.0;
 // WARNING THERSHOLDS
 // Durations specified in seconds
 // Maximum allowed time outside at one time.
@@ -101,14 +103,14 @@ function onInit() {
 
   var logging = function() {
     console.log("checking temperature");
-    var temp = E.getTemperature();
+    var temp = E.getTemperature() + TEMP_OFFSET;
     max_t = Math.max(max_t, temp);
     min_t = Math.min(min_t, temp);
     rollingAverage = rollingAverage ? (rollingAverage + temp) / 2 : temp;
     if (temp > MAX_TEMP[state] && pastReadings > 3) {
       // Temperature was too high for 4 times in a row
       console.log("temp way too high for too long, logging!");
-      logState(state, 1, max_t, min_t, rollingAverage);
+      logState(state, 1, max_t, min_t, rollingAverage, temp);
     } else if (temp > MAX_TEMP[state]) {
       // Temperature recorded was too high, although check again in the future.
       console.log("temperature too high, will check again");
@@ -116,7 +118,7 @@ function onInit() {
       changeInterval(logInterval, ALERT_FREQ);
     } else if (pastReadings > 0) {
       console.log("temperature is back to normal");
-      logState(state, 0, max_t, min_t, rollingAverage);
+      logState(state, 0, max_t, min_t, rollingAverage, temp);
       pastReadings = 0;
       changeInterval(logInterval, FREQUENCIES[state]);
     }
@@ -136,13 +138,12 @@ function onInit() {
         console.log(
             "Change of state detected and it's a second scan. Logging change");
         state = newState;
-        logState(newState, 0);
-        pastReadings = 0;
-        logging();
+        pastReadings = 1;
         max_t = -100;
         min_t = 100;
         rollingAverage = 0;
         secondScan = false;
+        logging();
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
       } else if (newState != state) {
@@ -192,12 +193,12 @@ function tearDown() {
 //   "avg": rolling average temperature recorded in given state so far,
 //   "a": boolean, whether it's alert
 // }
-function logState(s, a, max, min, avg) {
+function logState(s, a, max, min, avg, temp) {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
   f.write(name, JSON.stringify({
     d : Math.ceil(getTime()),
-    t : E.getTemperature(),
+    t : temp,
     s : s,
     b : Puck.getBatteryPercentage(),
     min : min,
