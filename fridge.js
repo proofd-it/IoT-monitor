@@ -1,1 +1,2 @@
-NRF.setAdvertising({}, {name : "fridge", interval : 150});
+const NAME = "fridge"
+NRF.setAdvertising({}, {name : NAME, interval : 150});
