@@ -18,7 +18,6 @@ if (DEV_MODE) {
 }
 
 const URL = "https://proofd-it.github.io/webapp/page.html?n=";
-const SCAN_FREQ = 10 * 60000;
 const SCAN_DURATION = 2500;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
