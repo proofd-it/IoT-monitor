@@ -1,7 +1,8 @@
+const TIMESTAMP = 1574846169;
 // Set to true to use shorter threshold suitable for testing.
 const DEV_MODE = false;
 // Whether to use probe or internal sensor to get ambient temperature.
-const USE_PROBE = false;
+const USE_PROBE = true;
 
 if (DEV_MODE) {
   const SCAN_FREQ = 10000;
@@ -62,6 +63,10 @@ var max_t = -100;
 var min_t = 100;
 var rollingAverage = 0;
 
+if (TIMESTAMP > 0) {
+  setTime(TIMESTAMP);
+}
+
 function readProbe() {
   var t1, t2;
   while (!t2) {
@@ -89,8 +94,6 @@ function onInit() {
     NRF.setAdvertising({}, {name : name});
     NRF.nfcURL(URL + name);
     startTime = Math.ceil(getTime());
-    // Set only if reset.
-    // setTime();
     pastReadings = 0;
     // When restarted, default to state outside.
     state = STATE_MAP.OUTSIDE;
