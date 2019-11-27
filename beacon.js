@@ -10,7 +10,7 @@ if (DEV_MODE) {
   const ALERT_FREQ = 10000;
 } else {
   // How often to perform Bluetooth scanning.
-  const SCAN_FREQ = 10 * 60000;
+  const SCAN_FREQ = 5 * 60000;
   const SECOND_SCAN = 1 * 60000;
   // How often record data for each phase, in miliseconds.
   const FREQUENCIES = {0 : 10 * 60000, 1 : 15 * 60000, 2 : 20 * 60000};
@@ -19,7 +19,7 @@ if (DEV_MODE) {
 
 const URL = "https://proofd-it.github.io/webapp/page.html?n=";
 const SCAN_FREQ = 10 * 60000;
-const SCAN_DURATION = 3500;
+const SCAN_DURATION = 2500;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
 const STATE_MAP = {
@@ -35,7 +35,7 @@ const HUMAN_STATE = {
 // How often to poll once the temperatue has been spotted as too high.
 const MAX_TEMP = {
   0 : 15,
-  1 : 15,
+  1 : 5,
   2 : 5
 };
 // Offset for temperature
