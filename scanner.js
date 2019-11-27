@@ -1,5 +1,5 @@
+const USE_PROBE = false;
 const SCAN_FREQ = 5 * 60000;
-var ow = new OneWire(D1);
 
 function onInit() {
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
@@ -57,8 +57,13 @@ function tearDown() {
 function logState(s) {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
-  var probe = readProbe();
-  console.log("probe temp is: " + probe);
+
+  var probe;
+  if (USE_PROBE) {
+    var ow = new OneWire(D1);
+    var probe = readProbe();
+    console.log("probe temp is: " + probe);
+  }
   f.write(name, JSON.stringify({
     d : Math.ceil(getTime()),
     t_sensor : E.getTemperature(),
