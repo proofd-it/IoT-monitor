@@ -61,7 +61,7 @@ function logState(s) {
   var probe;
   if (USE_PROBE) {
     var ow = new OneWire(D1);
-    var probe = readProbe();
+    probe = readProbe();
     console.log("probe temp is: " + probe);
   }
   f.write(name, JSON.stringify({
