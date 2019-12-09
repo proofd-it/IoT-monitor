@@ -11,7 +11,7 @@ if (DEV_MODE) {
   const ALERT_FREQ = 10000;
 } else {
   // How often to perform Bluetooth scanning.
-  const SCAN_FREQ = 5 * 60000;
+  const SCAN_FREQ = 7 * 60000;
   const SECOND_SCAN = 1 * 60000;
   // How often record data for each phase, in miliseconds.
   const FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
@@ -84,6 +84,14 @@ function readProbe() {
   return t2;
 }
 
+function readTemp() {
+  if (USE_PROBE) {
+    return readProbe() + TEMP_OFFSET;
+  } else {
+    return E.getTemperature() + TEMP_OFFSET;
+  }
+}
+
 function onInit() {
   var name;
   var secondScan;
@@ -127,12 +135,7 @@ function onInit() {
 
   var logging = function () {
     console.log("checking temperature");
-    var temp;
-    if (USE_PROBE) {
-      temp = readProbe() + TEMP_OFFSET;
-    } else {
-      temp = E.getTemperature() + TEMP_OFFSET;
-    }
+    var temp = readTemp();
     max_t = Math.max(max_t, temp);
     min_t = Math.min(min_t, temp);
     rollingAverage = rollingAverage ? (rollingAverage + temp) / 2 : temp;
@@ -167,12 +170,9 @@ function onInit() {
         console.log(
           "Change of state detected and it's a second scan. Logging change");
         state = newState;
-        pastReadings = 1;
-        max_t = -100;
-        min_t = 100;
-        rollingAverage = 0;
         secondScan = false;
-        logging();
+        var temp = readTemp();
+        logState(state, 0, temp, temp, temp, temp);
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
       } else if (newState != state) {
