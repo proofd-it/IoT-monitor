@@ -9,6 +9,7 @@ if (DEV_MODE) {
   const SECOND_SCAN = 10000;
   const FREQUENCIES = {0: 10000, 1: 10000, 2: 10000};
   const ALERT_FREQ = 10000;
+  const TEMP_REPEAT = 1;
 } else {
   // How often to perform Bluetooth scanning.
   const SCAN_FREQ = 7 * 60000;
@@ -16,6 +17,7 @@ if (DEV_MODE) {
   // How often record data for each phase, in miliseconds.
   const FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
   const ALERT_FREQ = 10 * 60000;
+  const TEMP_REPEAT = 3;
 }
 
 const URL = "https://proofd-it.github.io/webapp/page.html?n=";
@@ -57,7 +59,6 @@ var scanInterval;
 var logInterval;
 var pastReadings;
 var startTime;
-var firstRun = true;
 
 var max_t = -100;
 var min_t = 100;
@@ -139,8 +140,8 @@ function onInit() {
     max_t = Math.max(max_t, temp);
     min_t = Math.min(min_t, temp);
     rollingAverage = rollingAverage ? (rollingAverage + temp) / 2 : temp;
-    if (temp > MAX_TEMP[state] && pastReadings > 3) {
-      // Temperature was too high for 4 times in a row
+    if (temp > MAX_TEMP[state] && pastReadings > TEMP_REPEAT) {
+      // Temperature was too high for TEMP_REPEAT times in a row
       console.log("temp way too high for too long, logging!");
       logState(state, 1, max_t, min_t, rollingAverage, temp);
     } else if (temp > MAX_TEMP[state]) {
