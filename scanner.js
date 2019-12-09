@@ -6,7 +6,7 @@ const TIME = null;
 if (DEV) {
   const SCAN_FREQ = 5000;
 } else {
-  const SCAN_FREQ = 5 * 60000;
+  const SCAN_FREQ = 10 * 60000;
 }
 if (TIME) {
   setTime(TIME);
@@ -35,7 +35,7 @@ function onInit() {
         digitalWrite(LED2, 0);
         clearInterval(interval);
       }
-    }, 5000);
+    }, 3000);
   }, BTN, {edge: "rising", debounce: 50, repeat: true});
 
   var scanInterval = setInterval(function () {logState();}, SCAN_FREQ);
