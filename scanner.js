@@ -12,6 +12,8 @@ if (TIME) {
   setTime(TIME);
 }
 
+var ow = new OneWire(D1);
+
 function onInit() {
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   NRF.setAdvertising({}, {name: "logger"});
@@ -38,7 +40,7 @@ function onInit() {
     }, 3000);
   }, BTN, {edge: "rising", debounce: 50, repeat: true});
 
-  var scanInterval = setInterval(function () {logState();}, SCAN_FREQ);
+  setInterval(function () {logState();}, SCAN_FREQ);
 }
 
 function tearDown() {
@@ -65,13 +67,12 @@ function tearDown() {
 //   "s": state based on nearby beacons,
 //   "b": battery percentage
 // }
-function logState(s) {
+function logState() {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
 
   var probe = null;
   if (USE_PROBE) {
-    var ow = new OneWire(D1);
     probe = readProbe();
     console.log("probe temp is: " + probe);
   }
