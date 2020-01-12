@@ -7,7 +7,7 @@ const USE_PROBE = false;
 if (DEV_MODE) {
   const SCAN_FREQ = 10000;
   const SECOND_SCAN = 10000;
-  const FREQUENCIES = {0: 10000, 1: 10000, 2: 10000};
+  const FREQUENCIES = {0 : 10000, 1 : 10000, 2 : 10000};
   const ALERT_FREQ = 10000;
   const TEMP_REPEAT = 1;
 } else {
@@ -15,7 +15,7 @@ if (DEV_MODE) {
   const SCAN_FREQ = 7 * 60000;
   const SECOND_SCAN = 1 * 60000;
   // How often record data for each phase, in miliseconds.
-  const FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
+  const FREQUENCIES = {0 : 10 * 60000, 1 : 15 * 60000, 2 : 20 * 60000};
   const ALERT_FREQ = 10 * 60000;
   const TEMP_REPEAT = 3;
 }
@@ -25,20 +25,20 @@ const SCAN_DURATION = 2500;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
 const STATE_MAP = {
-  OUTSIDE: 0,
-  TRANSPORT: 1,
-  FRIDGE: 2
+  OUTSIDE : 0,
+  TRANSPORT : 1,
+  FRIDGE : 2
 };
 const HUMAN_STATE = {
-  0: "outside",
-  1: "transport",
-  2: "fridge"
+  0 : "outside",
+  1 : "transport",
+  2 : "fridge"
 };
 // How often to poll once the temperatue has been spotted as too high.
 const MAX_TEMP = {
-  0: 15,
-  1: 5,
-  2: 5
+  0 : 15,
+  1 : 5,
+  2 : 5
 };
 // Offset for temperature
 const TEMP_OFFSET = 0.0;
@@ -100,7 +100,7 @@ function onInit() {
   console.log("First time");
   name = getSerial().substring(0, 8).toLowerCase();
   secondScan = false;
-  NRF.setAdvertising({}, {name: name});
+  NRF.setAdvertising({}, {name : name});
   NRF.nfcURL(URL + name);
   startTime = Math.ceil(getTime());
   pastReadings = 0;
@@ -111,30 +111,30 @@ function onInit() {
   clearInterval();
 
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
-  setWatch(function () {
+  setWatch(function() {
     var cancel = false;
     var led = false;
-    var interval = setInterval(function () {
+    var interval = setInterval(function() {
       led = !led;
       digitalWrite(LED1, !led ? 1 : 0);
     }, 200);
     // Cancel if button released within 3 seconds.
-    setWatch(function () {
+    setWatch(function() {
       cancel = true;
       digitalWrite(LED1, 0);
       clearInterval(interval);
-    }, BTN, {edge: "falling", debounce: 50, repeat: false});
+    }, BTN, {edge : "falling", debounce : 50, repeat : false});
 
-    setTimeout(function () {
+    setTimeout(function() {
       if (!cancel) {
         tearDown();
         digitalWrite(LED1, 0);
         clearInterval(interval);
       }
     }, 3000);
-  }, BTN, {edge: "rising", debounce: 50, repeat: true});
+  }, BTN, {edge : "rising", debounce : 50, repeat : true});
 
-  var logging = function () {
+  var logging = function() {
     console.log("checking temperature");
     var temp = readTemp();
     max_t = Math.max(max_t, temp);
@@ -156,8 +156,8 @@ function onInit() {
       changeInterval(logInterval, FREQUENCIES[state]);
     }
   };
-  var scanning = function () {
-    NRF.findDevices(function (devices) {
+  var scanning = function() {
+    NRF.findDevices(function(devices) {
       var device = devices.pop();
       var newState;
       if (device && device.rssi < MIN_DB) {
@@ -165,11 +165,11 @@ function onInit() {
         newState = STATE_MAP.OUTSIDE;
       } else {
         newState =
-          device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
+            device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
       }
       if (secondScan && newState != state) {
         console.log(
-          "Change of state detected and it's a second scan. Logging change");
+            "Change of state detected and it's a second scan. Logging change");
         state = newState;
         secondScan = false;
         var temp = readTemp();
@@ -185,8 +185,8 @@ function onInit() {
         secondScan = false;
       }
     }, {
-      timeout: SCAN_DURATION,
-      filters: [{namePrefix: "fridge"}, {namePrefix: "transport"}]
+      timeout : SCAN_DURATION,
+      filters : [ {namePrefix : "fridge"}, {namePrefix : "transport"} ]
     });
   };
   // Scan for nearby beacons.
@@ -198,7 +198,7 @@ function onInit() {
 function tearDown() {
   // Light blue LED for confirmation.
   digitalWrite(LED3, 1);
-  setTimeout(function () {
+  setTimeout(function() {
     digitalWrite(LED3, 0);
     // Remove all existing logs.
     var f = require("Storage");
@@ -225,14 +225,14 @@ function logState(s, a, max, min, avg, temp) {
   var f = require("Storage");
   var name = Math.ceil(getTime()) % 100000000;
   f.write(name, JSON.stringify({
-    d: Math.ceil(getTime()),
-    t: temp,
-    s: s,
-    b: Puck.getBatteryPercentage(),
-    min: min,
-    max: max,
-    avg: avg,
-    a: a
+    d : Math.ceil(getTime()),
+    t : temp,
+    s : s,
+    b : Puck.getBatteryPercentage(),
+    min : min,
+    max : max,
+    avg : avg,
+    a : a
   }));
   console.log(getReading(name));
 }
@@ -253,7 +253,7 @@ function getDate(seconds) {
 }
 
 function getAll() {
-  var all = {"states": []};
+  var all = {"states" : []};
   var names = getNames().sort();
   var currentState;
   for (var i = 0; i < names.length; i++) {
@@ -262,17 +262,18 @@ function getAll() {
     if (HUMAN_STATE[reading.s] != currentState) {
       currentState = HUMAN_STATE[reading.s];
       all.states.push({
-        state: currentState,
-        timeStart: currentState ? dateString : getDate(startTime),
-        timeStartSeconds: currentState ? reading.d : startTime,
-        assessment: !reading.a ? "ok" : "not ok",
-        data: [{y: reading.t, t: dateString}]
+        state : currentState,
+        timeStart : currentState ? dateString : getDate(startTime),
+        timeStartSeconds : currentState ? reading.d : startTime,
+        assessment : !reading.a ? "ok" : "not ok",
+        average : reading.avg,
+        data : []
       });
     } else {
       all.states[all.states.length - 1].assessment =
-        !reading.a ? "ok" : "not ok";
+          !reading.a ? "ok" : "not ok";
       all.states[all.states.length - 1].data.push(
-        {y: reading.t, t: dateString});
+          {y : reading.t, t : dateString});
     }
   }
   all.states[all.states.length - 1].timeEnd = getDate(Math.ceil(getTime()));
@@ -285,7 +286,7 @@ function getAll() {
     if (i < all.states.length - 1) {
       all.states[i].timeEnd = all.states[i + 1].timeStart;
       duration =
-        all.states[i + 1].timeStartSeconds - all.states[i].timeStartSeconds;
+          all.states[i + 1].timeStartSeconds - all.states[i].timeStartSeconds;
     } else {
       duration = getTime() - all.states[i].timeStartSeconds;
     }
@@ -300,15 +301,15 @@ function getAll() {
 
   if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
     all.warning = "Item has been left outside at one stage for over " +
-      MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes";
+                  MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes";
   }
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
     all.warning = "Item has been brought outside for over " +
-      MAX_TOTAL_OUTSIDE_TIMES + " times!";
+                  MAX_TOTAL_OUTSIDE_TIMES + " times!";
   }
   if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
     all.warning = "Item has been outside in total for more than " +
-      MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!";
+                  MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!";
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
