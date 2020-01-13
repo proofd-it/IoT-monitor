@@ -2,21 +2,32 @@ const DEV = false;
 
 const USE_PROBE = false;
 const TIME = null;
+const NAME = "logger";
 
 if (DEV) {
   const SCAN_FREQ = 5000;
 } else {
-  const SCAN_FREQ = 10 * 60000;
+  const SCAN_FREQ = 5 * 60000;
 }
 if (TIME) {
   setTime(TIME);
 }
 
 var ow = new OneWire(D1);
+var sensor;
+if (USE_PROBE) {
+  while (!sensor) {
+    try {
+      sensor = require("DS18B20").connect(ow);
+    }
+    catch (e) {
+    }
+  }
+}
 
 function onInit() {
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
-  NRF.setAdvertising({}, {name: "logger"});
+  NRF.setAdvertising({}, {name: NAME});
   setWatch(function () {
     var cancel = false;
     var led = false;
@@ -88,14 +99,9 @@ function logState() {
 function readProbe() {
   var t1, t2;
   while (!t2) {
-    try {
-      var sensor = require("DS18B20").connect(ow);
-      while (!t1 || !t2) {
-        t1 = sensor.getTemp();
-        t2 = sensor.getTemp();
-      }
-    } catch (err) {
-      console.log("sensor not found, trying again");
+    while (!t1 || !t2) {
+      t1 = sensor.getTemp();
+      t2 = sensor.getTemp();
     }
   }
   return t2;
@@ -113,7 +119,7 @@ function getReading(name) {
 
 function getAll() {
   var names = getNames();
-  names.forEach(function(item) {
+  names.forEach(function (item) {
     console.log(getReading(item));
   });
 }
