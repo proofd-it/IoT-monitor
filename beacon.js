@@ -20,7 +20,7 @@ if (DEV_MODE) {
   const TEMP_REPEAT = 3;
 }
 
-const URL = "https://proofd-it.github.io/webapp/page.html?n=";
+const URL = "https://trustlens.abdn.ac.uk/webapp/receive?n=";
 const SCAN_DURATION = 2500;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
