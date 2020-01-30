@@ -63,6 +63,7 @@ var startTime;
 var max_t = -100;
 var min_t = 100;
 var rollingAverage = 0;
+var totalReadings = 0;
 
 if (TIMESTAMP) {
   setTime(TIMESTAMP);
@@ -137,6 +138,7 @@ function onInit() {
   var logging = function() {
     console.log("checking temperature");
     var temp = readTemp();
+    totalReadings += 1;
     max_t = Math.max(max_t, temp);
     min_t = Math.min(min_t, temp);
     rollingAverage = rollingAverage ? (rollingAverage + temp) / 2 : temp;
@@ -176,6 +178,10 @@ function onInit() {
         logState(state, 0, temp, temp, temp, temp);
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
+        rollingAverage = 0;
+        max_t = -100;
+        min_t = 100;
+        totalReadings = 0;
       } else if (newState != state) {
         console.log("Change of state detected, although it's the first change");
         secondScan = true;
@@ -220,6 +226,7 @@ function tearDown() {
 //   "max": maximum temperature recorded in given state so far,
 //   "avg": rolling average temperature recorded in given state so far,
 //   "a": boolean, whether it's alert
+//   "t": int, how many temperature readings so far,
 // }
 function logState(s, a, max, min, avg, temp) {
   var f = require("Storage");
@@ -232,7 +239,8 @@ function logState(s, a, max, min, avg, temp) {
     min : min,
     max : max,
     avg : avg,
-    a : a
+    a : a,
+    t: totalReadings
   }));
   console.log(getReading(name));
 }
@@ -267,11 +275,13 @@ function getAll() {
         timeStartSeconds : currentState ? reading.d : startTime,
         assessment : !reading.a ? "ok" : "not ok",
         average : reading.avg,
-        data : []
+        data : [],
+        totalReadings: reading.t
       });
     } else {
       all.states[all.states.length - 1].assessment =
           !reading.a ? "ok" : "not ok";
+      all.states[all.states.length - 1].totalReadings = reading.t;
       all.states[all.states.length - 1].data.push(
           {y : reading.t, t : dateString});
     }
@@ -287,8 +297,11 @@ function getAll() {
       all.states[i].timeEnd = all.states[i + 1].timeStart;
       duration =
           all.states[i + 1].timeStartSeconds - all.states[i].timeStartSeconds;
+
+      all.states[i].totalReadings = all.states[i + 1].totalReadings - 1;
     } else {
       duration = getTime() - all.states[i].timeStartSeconds;
+      all.states[i].totalReadings = totalReadings;
     }
     if (all.states[i].state == "outside") {
       duration = Math.ceil(duration);
@@ -299,17 +312,18 @@ function getAll() {
     delete all.states[i].timeStartSeconds;
   }
 
+  all.warnings = [];
   if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
-    all.warning = "Item has been left outside at one stage for over " +
-                  MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes";
+    all.warnings.append({code:1, warning:"Item has been left outside at one stage for over " +
+      MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes"});
   }
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
-    all.warning = "Item has been brought outside for over " +
-                  MAX_TOTAL_OUTSIDE_TIMES + " times!";
+    all.warnings.append({code:2, warning: "Item has been brought outside for over " +
+      MAX_TOTAL_OUTSIDE_TIMES + " times!"});
   }
   if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
-    all.warning = "Item has been outside in total for more than " +
-                  MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!";
+    all.warnings.append({code:3, warning: "Item has been outside in total for more than " +
+      MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!"});
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
