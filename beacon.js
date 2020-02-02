@@ -314,19 +314,19 @@ function getAll() {
 
   all.warnings = [];
   if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
-    all.warnings.append({
+    all.warnings.push({
       code: 1, warning: "Item has been left outside at one stage for over " +
         MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes"
     });
   }
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
-    all.warnings.append({
+    all.warnings.push({
       code: 2, warning: "Item has been brought outside for over " +
         MAX_TOTAL_OUTSIDE_TIMES + " times!"
     });
   }
   if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
-    all.warnings.append({
+    all.warnings.push({
       code: 3, warning: "Item has been outside in total for more than " +
         MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!"
     });
