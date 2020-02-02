@@ -208,7 +208,10 @@ function tearDown() {
     digitalWrite(LED3, 0);
     // Remove all existing logs.
     var f = require("Storage");
-    f.eraseAll();
+    let names = getNames();
+    names.forEach(function (element) {
+      f.erase(element);
+    });
     onInit();
   }, 3000);
 }
@@ -247,6 +250,11 @@ function logState(s, a, max, min, avg, temp) {
 
 function getNames() {
   var f = require("Storage");
+  let list = f.list();
+  index = list.indexOf(".bootcde");
+  if (index > -1) {
+    list.splice(index, 1);
+  }
   return f.list();
 }
 
@@ -277,7 +285,7 @@ function getAll() {
         average: reading.avg,
         data: [],
         totalReadings: reading.tot
-        });
+      });
     } else {
       all.states[all.states.length - 1].assessment =
         !reading.a ? "ok" : "not ok";
@@ -299,9 +307,11 @@ function getAll() {
         all.states[i + 1].timeStartSeconds - all.states[i].timeStartSeconds;
 
       all.states[i].totalReadings = all.states[i + 1].totalReadings - 1;
+      all.states[i].average = all.states[i + 1].average;
     } else {
       duration = getTime() - all.states[i].timeStartSeconds;
       all.states[i].totalReadings = totalReadings;
+      all.states[i].average = rollingAverage;
     }
     if (all.states[i].state == "outside") {
       duration = Math.ceil(duration);
@@ -334,5 +344,3 @@ function getAll() {
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
 }
-
-onInit();
