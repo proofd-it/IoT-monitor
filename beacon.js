@@ -1,8 +1,7 @@
-const TIMESTAMP = null;
 // Set to true to use shorter threshold suitable for testing.
 const DEV_MODE = false;
 // Whether to use probe or internal sensor to get ambient temperature.
-const USE_PROBE = false;
+const USE_PROBE = true;
 
 if (DEV_MODE) {
   const SCAN_FREQ = 10000;
@@ -44,12 +43,14 @@ const MAX_TEMP = {
 const TEMP_OFFSET = 0.0;
 // WARNING THERSHOLDS
 // Durations specified in seconds
-// Maximum allowed time outside at one time.
-const MAX_TOTAL_OUTSIDE_DURATION = 3600; // 1 hour
 // Maximum allowed number of times the item can be outside.
 const MAX_TOTAL_OUTSIDE_TIMES = 3;
 // Maximum cumulative allowed time outside
-const MAX_CUMULATIVE_OUTSIDE = 18000; // 5 hours
+const MAX_TOTAL_OUTSIDE = 5 * 3600; // 5 hours
+// Maximum cumulative allowed time in transport
+const MAX_TOTAL_TRANSPORT = 5 * 3600; // 5 hours
+// Maximum cumulative allowed time in the fridge
+const MAX_TOTAL_FRIDGE = 15 * 3600; // 155 hours
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
@@ -65,9 +66,7 @@ var min_t = 100;
 var rollingAverage = 0;
 var totalReadings = 0;
 
-if (TIMESTAMP) {
-  setTime(TIMESTAMP);
-}
+var firstRun = true;
 
 function readProbe() {
   var t1, t2;
@@ -94,23 +93,48 @@ function readTemp() {
   }
 }
 
-function onInit() {
+function readServerTime() {
+  var uart;
+  NRF.requestDevice({timeout: 3000, filters: [{namePrefix: 'timeServer'}]}).then(function (device) {
+    return require("ble_uart").connect(device);
+  }).then(function (u) {
+    uart = u;
+    return new Promise(function (r) {setTimeout(r, 500);});
+  }).then(function () {
+    return uart.eval('readTime()');
+  }).then(function (data) {
+    setTime(data);
+    uart.disconnect();
+  });
+}
+
+function mainLoop() {
   var name;
   var secondScan;
 
-  console.log("First time");
+  if (firstRun) {
+    try {
+      readServerTime();
+    }
+    catch (e) {
+      console.log("Time puck not found, continuouing without");
+    }
+  }
+  
   name = getSerial().substring(0, 8).toLowerCase();
   secondScan = false;
   NRF.setAdvertising({}, {name: name});
-  NRF.nfcURL(URL + name);
   startTime = Math.ceil(getTime());
   pastReadings = 0;
   // When restarted, default to state outside.
   state = STATE_MAP.OUTSIDE;
 
   console.log("Start");
+  firstRun = false;
   clearInterval();
-
+  var url = URL + name;
+  NRF.nfcURL(url);
+  
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   setWatch(function () {
     var cancel = false;
@@ -212,7 +236,7 @@ function tearDown() {
     names.forEach(function (element) {
       f.erase(element);
     });
-    onInit();
+    mainLoop();
   }, 3000);
 }
 
@@ -296,8 +320,9 @@ function getAll() {
   }
   all.states[all.states.length - 1].timeEnd = getDate(Math.ceil(getTime()));
 
-  var totalOutsideDuration = 0;
   var maxOutside = 0;
+  var maxFridge = 0;
+  var maxTransport = 0;
   var totalOutside = 0;
   for (i = 0; i < all.states.length; i++) {
     var duration;
@@ -313,34 +338,50 @@ function getAll() {
       all.states[i].totalReadings = totalReadings;
       all.states[i].average = rollingAverage;
     }
+    switch (all.states[i].state) {
+      case "outside":
+        maxOutside += Math.ceil(duration);
+        totalOutside += 1;
+        break;
+      case "transport":
+        maxTransport += Math.ceil(duration);
+        break;
+      case "fridge":
+        maxFridge += Math.ceil(duration);
+        break;
+    }
+
     if (all.states[i].state == "outside") {
-      duration = Math.ceil(duration);
-      totalOutsideDuration += duration;
-      maxOutside = Math.max(maxOutside, duration);
-      totalOutside += 1;
     }
     delete all.states[i].timeStartSeconds;
   }
 
   all.warnings = [];
-  if (maxOutside > MAX_TOTAL_OUTSIDE_DURATION) {
-    all.warnings.push({
-      code: 1, warning: "Item has been left outside at one stage for over " +
-        MAX_TOTAL_OUTSIDE_DURATION / 60 + " minutes"
-    });
-  }
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
     all.warnings.push({
-      code: 2, warning: "Item has been brought outside for over " +
+      code: 1, warning: "Item has been brought outside for over " +
         MAX_TOTAL_OUTSIDE_TIMES + " times!"
     });
   }
-  if (totalOutsideDuration > MAX_CUMULATIVE_OUTSIDE) {
+  if (maxOutside > MAX_TOTAL_OUTSIDE) {
     all.warnings.push({
-      code: 3, warning: "Item has been outside in total for more than " +
-        MAX_CUMULATIVE_OUTSIDE / 60 + " minutes!"
+      code: 2, warning: "Item has been outside for over " +
+        MAX_TOTAL_OUTSIDE / 60 + " minutes"
+    });
+  }
+  if (maxFridge > MAX_TOTAL_FRIDGE) {
+    all.warnings.push({
+      code: 3, warning: "Item has been in the fridge for over " +
+        MAX_TOTAL_FRIDGE / 60 + " minutes"
+    });
+  }
+  if (maxTransport > MAX_TOTAL_TRANSPORT) {
+    all.warnings.push({
+      code: 4, warning: "Item has been in the transport for over " +
+        MAX_TOTAL_TRANSPORT / 60 + " minutes"
     });
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
 }
+mainLoop();
