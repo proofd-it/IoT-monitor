@@ -40,7 +40,7 @@ const MAX_TEMP = {
   2: 5
 };
 // Offset for temperature
-const TEMP_OFFSET = 0.0;
+const TEMP_OFFSET = 1.5;
 // WARNING THERSHOLDS
 // Durations specified in seconds
 // Maximum allowed number of times the item can be outside.
