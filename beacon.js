@@ -50,7 +50,7 @@ const MAX_TOTAL_OUTSIDE = 5 * 3600; // 5 hours
 // Maximum cumulative allowed time in transport
 const MAX_TOTAL_TRANSPORT = 5 * 3600; // 5 hours
 // Maximum cumulative allowed time in the fridge
-const MAX_TOTAL_FRIDGE = 15 * 3600; // 155 hours
+const MAX_TOTAL_FRIDGE = 15 * 3600; // 15 hours
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
@@ -79,7 +79,6 @@ function readProbe() {
         t2 = sensor.getTemp();
       }
     } catch (err) {
-      console.log("sensor not found, trying again");
     }
   }
   return t2;
@@ -99,7 +98,7 @@ function readServerTime() {
     return require("ble_uart").connect(device);
   }).then(function (u) {
     uart = u;
-    return new Promise(function (r) {setTimeout(r, 500);});
+    return new Promise(function (r) {setTimeout(r, 1000);});
   }).then(function () {
     return uart.eval('readTime()');
   }).then(function (data) {
@@ -108,20 +107,26 @@ function readServerTime() {
   });
 }
 
-function mainLoop() {
-  var name;
-  var secondScan;
-
+function onInit() {
   if (firstRun) {
     try {
       readServerTime();
+      setTimeout(function () {
+        mainLoop();
+      }, 6000);
     }
     catch (e) {
       console.log("Time puck not found, continuouing without");
     }
   }
-  
+}
+
+function mainLoop() {
+  var name;
+  var secondScan;
+
   name = getSerial().substring(0, 8).toLowerCase();
+  NRF.nfcURL(URL + name);
   secondScan = false;
   NRF.setAdvertising({}, {name: name});
   startTime = Math.ceil(getTime());
@@ -132,9 +137,7 @@ function mainLoop() {
   console.log("Start");
   firstRun = false;
   clearInterval();
-  var url = URL + name;
-  NRF.nfcURL(url);
-  
+
   // Watch for reset button press. More than 3 seconds will initiate tearDown.
   setWatch(function () {
     var cancel = false;
@@ -384,4 +387,4 @@ function getAll() {
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
 }
-mainLoop();
+onInit();
