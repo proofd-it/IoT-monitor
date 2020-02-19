@@ -35,12 +35,14 @@ const HUMAN_STATE = {
 };
 // How often to poll once the temperatue has been spotted as too high.
 const MAX_TEMP = {
-  0: 15,
+  0: 20,
   1: 5,
   2: 5
 };
+// Maximum number of temperature readings per stage to output on final JSON
+const MAX_DATA_SAMPLES = 24;
 // Offset for temperature
-const TEMP_OFFSET = 1.5;
+const TEMP_OFFSET = 1.0;
 // WARNING THERSHOLDS
 // Durations specified in seconds
 // Maximum allowed number of times the item can be outside.
@@ -180,7 +182,6 @@ function mainLoop() {
       changeInterval(logInterval, ALERT_FREQ);
     } else if (pastReadings > 0) {
       console.log("temperature is back to normal");
-      logState(state, 0, max_t, min_t, rollingAverage, temp);
       pastReadings = 0;
       changeInterval(logInterval, FREQUENCIES[state]);
     }
@@ -299,10 +300,12 @@ function getAll() {
   var all = {"states": []};
   var names = getNames().sort();
   var currentState;
+  var sampleCount = 0;
   for (var i = 0; i < names.length; i++) {
     var reading = JSON.parse(getReading(names[i]));
     var dateString = getDate(reading.d);
     if (HUMAN_STATE[reading.s] != currentState) {
+      sampleCount = 0;
       currentState = HUMAN_STATE[reading.s];
       all.states.push({
         state: currentState,
@@ -317,8 +320,11 @@ function getAll() {
       all.states[all.states.length - 1].assessment =
         !reading.a ? "ok" : "not ok";
       all.states[all.states.length - 1].totalReadings = reading.tot;
-      all.states[all.states.length - 1].data.push(
-        {y: reading.t, t: dateString});
+      if (sampleCount < MAX_DATA_SAMPLES) {
+        all.states[all.states.length - 1].data.push(
+          {y: reading.t, t: dateString});
+      }
+      sampleCount += 1;
     }
   }
   all.states[all.states.length - 1].timeEnd = getDate(Math.ceil(getTime()));
