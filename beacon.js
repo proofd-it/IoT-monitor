@@ -3,23 +3,29 @@ const DEV_MODE = false;
 // Whether to use probe or internal sensor to get ambient temperature.
 const USE_PROBE = true;
 
+let SCAN_FREQ;
+let SECOND_SCAN;
+let FREQUENCIES;
+let ALERT_FREQ;
+let TEMP_REPEAT;
+
 if (DEV_MODE) {
-  const SCAN_FREQ = 10000;
-  const SECOND_SCAN = 10000;
-  const FREQUENCIES = {0: 10000, 1: 10000, 2: 10000};
-  const ALERT_FREQ = 10000;
-  const TEMP_REPEAT = 1;
+  SCAN_FREQ = 10000;
+  SECOND_SCAN = 10000;
+  FREQUENCIES = {0: 10000, 1: 10000, 2: 10000};
+  ALERT_FREQ = 10000;
+  TEMP_REPEAT = 1;
 } else {
   // How often to perform Bluetooth scanning.
-  const SCAN_FREQ = 7 * 60000;
-  const SECOND_SCAN = 1 * 60000;
+  SCAN_FREQ = 7 * 60000;
+  SECOND_SCAN = 1 * 60000;
   // How often record data for each phase, in miliseconds.
-  const FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
-  const ALERT_FREQ = 10 * 60000;
-  const TEMP_REPEAT = 3;
+  FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
+  ALERT_FREQ = 10 * 60000;
+  TEMP_REPEAT = 3;
 }
 
-const URL = "https://trustlens.abdn.ac.uk/webapp/receive?n=";
+const TRUSTLENS_URL = "https://trustlens.abdn.ac.uk/webapp/receive?n=";
 const SCAN_DURATION = 2500;
 // Minimum required signal strenght in dB.
 const MIN_DB = -85;
@@ -128,7 +134,7 @@ function mainLoop() {
   var secondScan;
 
   name = getSerial().substring(0, 8).toLowerCase();
-  NRF.nfcURL(URL + name);
+  NRF.nfcURL(TRUSTLENS_URL + name);
   secondScan = false;
   NRF.setAdvertising({}, {name: name});
   startTime = Math.ceil(getTime());
@@ -240,6 +246,7 @@ function tearDown() {
     names.forEach(function (element) {
       f.erase(element);
     });
+    f.erase("readings");
     mainLoop();
   }, 3000);
 }
@@ -273,17 +280,25 @@ function logState(s, a, max, min, avg, temp) {
     a: a,
     tot: totalReadings
   }));
+  appendTimestamp(name);
   console.log(getReading(name));
 }
 
-function getNames() {
+function appendTimestamp(name) {
   var f = require("Storage");
-  let list = f.list();
-  index = list.indexOf(".bootcde");
-  if (index > -1) {
-    list.splice(index, 1);
+  let r = f.read("readings");
+  if (r == "" || r == null) {
+    f.write("readings", name);
+    return;
   }
-  return f.list();
+  let y = `${r}`;
+  f.write("readings", y + " " + name);
+}
+
+function getNames() {
+  let f = require("Storage");
+  let readings = f.read("readings");
+  return readings.split(" ");
 }
 
 function getReading(name) {
@@ -298,7 +313,7 @@ function getDate(seconds) {
 
 function getAll() {
   var all = {"states": []};
-  var names = getNames().sort();
+  var names = getNames();
   var currentState;
   var sampleCount = 0;
   for (var i = 0; i < names.length; i++) {
