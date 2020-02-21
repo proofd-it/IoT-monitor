@@ -41,7 +41,7 @@ const HUMAN_STATE = {
 };
 // How often to poll once the temperatue has been spotted as too high.
 const MAX_TEMP = {
-  0: 20,
+  0: 25,
   1: 5,
   2: 5
 };
