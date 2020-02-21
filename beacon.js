@@ -389,17 +389,17 @@ function getAll() {
   }
   if (maxOutside > MAX_TOTAL_OUTSIDE) {
     all.warnings.push({
-      code: 3, warning: "The item has been outside the chilled storage for " + (maxOutside / 3600.0).toFixed(2) + "hours. The maximum allowed time is " + (MAX_TOTAL_OUTSIDE / 3600.0).toFixed(2) + " hours"
+      code: 3, warning: "The item has been outside the chilled storage for " + (maxOutside / 3600.0).toFixed(2) + " hours. The maximum allowed time is " + (MAX_TOTAL_OUTSIDE / 3600.0).toFixed(2) + " hours"
     });
   }
   if (maxFridge > MAX_TOTAL_FRIDGE) {
     all.warnings.push({
-      code: 3, warning: "The item has been in chilled storage for " + (maxFridge / 3600.0).toFixed(2) + "hours. The maximum allowed time is " + (MAX_TOTAL_FRIDGE / 3600.0).toFixed(2) + " hours"
+      code: 3, warning: "The item has been in chilled storage for " + (maxFridge / 3600.0).toFixed(2) + " hours. The maximum allowed time is " + (MAX_TOTAL_FRIDGE / 3600.0).toFixed(2) + " hours"
     });
   }
   if (maxTransport > MAX_TOTAL_TRANSPORT) {
     all.warnings.push({
-      code: 4, warning: "Item has been in transport for " + (maxTransport / 3600.0).toFixed(2) + "hours. The maximum allowed time is " + (MAX_TOTAL_TRANSPORT / 3600.0).toFixed(2) + " hours"
+      code: 4, warning: "Item has been in transport for " + (maxTransport / 3600.0).toFixed(2) + " hours. The maximum allowed time is " + (MAX_TOTAL_TRANSPORT / 3600.0).toFixed(2) + " hours"
     });
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
