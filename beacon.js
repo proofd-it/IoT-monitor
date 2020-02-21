@@ -383,26 +383,23 @@ function getAll() {
   all.warnings = [];
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
     all.warnings.push({
-      code: 1, warning: "Item has been brought outside for over " +
-        MAX_TOTAL_OUTSIDE_TIMES + " times!"
+      code: 1, warning: "Item has been kept outside chilled storage " + totalOutside + " number of times. The maximum allowed number of outside stages is " +
+        MAX_TOTAL_OUTSIDE_TIMES + " times."
     });
   }
   if (maxOutside > MAX_TOTAL_OUTSIDE) {
     all.warnings.push({
-      code: 2, warning: "Item has been outside for over " +
-        MAX_TOTAL_OUTSIDE / 60 + " minutes"
+      code: 3, warning: "The item has been outside the chilled storage for " + (maxOutside / 3600.0).toFixed(2) + "hours. The maximum allowed time is " + (MAX_TOTAL_OUTSIDE / 3600.0).toFixed(2) + " hours"
     });
   }
   if (maxFridge > MAX_TOTAL_FRIDGE) {
     all.warnings.push({
-      code: 3, warning: "Item has been in the fridge for over " +
-        MAX_TOTAL_FRIDGE / 60 + " minutes"
+      code: 3, warning: "The item has been in chilled storage for " + (maxFridge / 3600.0).toFixed(2) + "hours. The maximum allowed time is " + (MAX_TOTAL_FRIDGE / 3600.0).toFixed(2) + " hours"
     });
   }
   if (maxTransport > MAX_TOTAL_TRANSPORT) {
     all.warnings.push({
-      code: 4, warning: "Item has been in the transport for over " +
-        MAX_TOTAL_TRANSPORT / 60 + " minutes"
+      code: 4, warning: "Item has been in transport for " + (maxTransport / 3600.0).toFixed(2) + "hours. The maximum allowed time is " + (MAX_TOTAL_TRANSPORT / 3600.0).toFixed(2) + " hours"
     });
   }
   all.puckID = getSerial().substring(0, 8).toLowerCase();
