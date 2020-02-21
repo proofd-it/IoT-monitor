@@ -52,9 +52,9 @@ const TEMP_OFFSET = 1.0;
 // WARNING THERSHOLDS
 // Durations specified in seconds
 // Maximum allowed number of times the item can be outside.
-const MAX_TOTAL_OUTSIDE_TIMES = 3;
+const MAX_TOTAL_OUTSIDE_TIMES = 1;
 // Maximum cumulative allowed time outside
-const MAX_TOTAL_OUTSIDE = 5 * 3600; // 5 hours
+const MAX_TOTAL_OUTSIDE = 3 * 3600; // 5 hours
 // Maximum cumulative allowed time in transport
 const MAX_TOTAL_TRANSPORT = 5 * 3600; // 5 hours
 // Maximum cumulative allowed time in the fridge
