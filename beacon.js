@@ -389,7 +389,7 @@ function getAll() {
   }
   if (maxOutside > MAX_TOTAL_OUTSIDE) {
     all.warnings.push({
-      code: 3, warning: "The item has been outside the chilled storage for " + (maxOutside / 3600.0).toFixed(2) + " hours. The maximum allowed time is " + (MAX_TOTAL_OUTSIDE / 3600.0).toFixed(2) + " hours"
+      code: 2, warning: "The item has been outside the chilled storage for " + (maxOutside / 3600.0).toFixed(2) + " hours. The maximum allowed time is " + (MAX_TOTAL_OUTSIDE / 3600.0).toFixed(2) + " hours"
     });
   }
   if (maxFridge > MAX_TOTAL_FRIDGE) {
