@@ -242,7 +242,13 @@ function tearDown() {
     digitalWrite(LED3, 0);
     // Remove all existing logs.
     var f = require("Storage");
-    let names = getNames();
+    let names;
+    try {
+      names = getNames();
+    } catch (e) {
+      names = f.list();
+      names.splice(names.indexOf(".bootcde"), 1);
+    }
     names.forEach(function (element) {
       f.erase(element);
     });
@@ -405,4 +411,3 @@ function getAll() {
   all.puckID = getSerial().substring(0, 8).toLowerCase();
   return JSON.stringify(all);
 }
-onInit();
