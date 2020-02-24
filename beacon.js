@@ -294,7 +294,7 @@ function appendTimestamp(name) {
   var f = require("Storage");
   let r = f.read("readings");
   if (r == "" || r == null) {
-    f.write("readings", name);
+    f.write("readings", name.toString());
     return;
   }
   let y = `${r}`;
