@@ -20,8 +20,8 @@ if (DEV_MODE) {
   SCAN_FREQ = 7 * 60000;
   SECOND_SCAN = 1 * 60000;
   // How often record data for each phase, in miliseconds.
-  FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
-  ALERT_FREQ = 10 * 60000;
+  FREQUENCIES = {0: 10 * 60000, 1: 10 * 60000, 2: 15 * 60000};
+  ALERT_FREQ = 7 * 60000;
   TEMP_REPEAT = 3;
 }
 
@@ -48,7 +48,7 @@ const MAX_TEMP = {
 // Maximum number of temperature readings per stage to output on final JSON
 const MAX_DATA_SAMPLES = 24;
 // Offset for temperature
-const TEMP_OFFSET = 1.0;
+const TEMP_OFFSET = 0.0;
 // WARNING THERSHOLDS
 // Durations specified in seconds
 // Maximum allowed number of times the item can be outside.
@@ -69,9 +69,6 @@ var logInterval;
 var pastReadings;
 var startTime;
 
-var max_t = -100;
-var min_t = 100;
-var rollingAverage = 0;
 var totalReadings = 0;
 
 var firstRun = true;
@@ -91,6 +88,10 @@ function readProbe() {
   }
   return t2;
 }
+
+var min_t = readProbe();
+var max_t = readProbe();
+var rollingAverage = readProbe();
 
 function readTemp() {
   if (USE_PROBE) {
@@ -116,17 +117,10 @@ function readServerTime() {
 }
 
 function onInit() {
-  if (firstRun) {
-    try {
-      readServerTime();
-      setTimeout(function () {
-        mainLoop();
-      }, 6000);
-    }
-    catch (e) {
-      console.log("Time puck not found, continuouing without");
-    }
-  }
+  Bluetooth.setConsole(true);
+  setTimeout(function () {
+    mainLoop();
+  }, 6000);
 }
 
 function mainLoop() {
@@ -209,13 +203,13 @@ function mainLoop() {
         state = newState;
         secondScan = false;
         var temp = readTemp();
-        logState(state, 0, temp, temp, temp, temp);
+        rollingAverage = temp;
+        max_t = temp;
+        min_t = temp;
+        totalReadings = 1;
+        logState(state, 0, max_t, min_t, rollingAverage, temp);
         changeInterval(logInterval, FREQUENCIES[newState]);
         changeInterval(scanInterval, SCAN_FREQ);
-        rollingAverage = 0;
-        max_t = -100;
-        min_t = 100;
-        totalReadings = 0;
       } else if (newState != state) {
         console.log("Change of state detected, although it's the first change");
         secondScan = true;
