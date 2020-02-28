@@ -20,15 +20,14 @@ if (DEV_MODE) {
   SCAN_FREQ = 7 * 60000;
   SECOND_SCAN = 1 * 60000;
   // How often record data for each phase, in miliseconds.
-  FREQUENCIES = {0: 10 * 60000, 1: 10 * 60000, 2: 15 * 60000};
-  ALERT_FREQ = 7 * 60000;
+  FREQUENCIES = {0: 10 * 60000, 1: 15 * 60000, 2: 20 * 60000};
+  ALERT_FREQ = 8 * 60000;
   TEMP_REPEAT = 3;
 }
 
 const TRUSTLENS_URL = "https://trustlens.abdn.ac.uk/webapp/receive?n=";
 const SCAN_DURATION = 2500;
 // Minimum required signal strenght in dB.
-const MIN_DB = -85;
 const STATE_MAP = {
   OUTSIDE: 0,
   TRANSPORT: 1,
@@ -54,11 +53,11 @@ const TEMP_OFFSET = 0.0;
 // Maximum allowed number of times the item can be outside.
 const MAX_TOTAL_OUTSIDE_TIMES = 1;
 // Maximum cumulative allowed time outside
-const MAX_TOTAL_OUTSIDE = 3 * 3600; // 5 hours
+const MAX_TOTAL_OUTSIDE = 3 * 3600; // 3 hours
 // Maximum cumulative allowed time in transport
 const MAX_TOTAL_TRANSPORT = 5 * 3600; // 5 hours
 // Maximum cumulative allowed time in the fridge
-const MAX_TOTAL_FRIDGE = 15 * 3600; // 15 hours
+const MAX_TOTAL_FRIDGE = 48 * 3600; // 48 hours
 // ==============================
 // ONLY change ABOVE this line ^^^
 // ==============================
@@ -70,8 +69,6 @@ var pastReadings;
 var startTime;
 
 var totalReadings = 0;
-
-var firstRun = true;
 
 function readProbe() {
   var t1, t2;
@@ -99,21 +96,6 @@ function readTemp() {
   } else {
     return E.getTemperature() + TEMP_OFFSET;
   }
-}
-
-function readServerTime() {
-  var uart;
-  NRF.requestDevice({timeout: 3000, filters: [{namePrefix: 'timeServer'}]}).then(function (device) {
-    return require("ble_uart").connect(device);
-  }).then(function (u) {
-    uart = u;
-    return new Promise(function (r) {setTimeout(r, 1000);});
-  }).then(function () {
-    return uart.eval('readTime()');
-  }).then(function (data) {
-    setTime(data);
-    uart.disconnect();
-  });
 }
 
 function onInit() {
@@ -190,13 +172,7 @@ function mainLoop() {
     NRF.findDevices(function (devices) {
       var device = devices.pop();
       var newState;
-      if (device && device.rssi < MIN_DB) {
-        console.log("Too far away, ignoring");
-        newState = STATE_MAP.OUTSIDE;
-      } else {
-        newState =
-          device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
-      }
+      newState = device ? STATE_MAP[device.name.toUpperCase()] : STATE_MAP.OUTSIDE;
       if (secondScan && newState != state) {
         console.log(
           "Change of state detected and it's a second scan. Logging change");
@@ -383,7 +359,7 @@ function getAll() {
   all.warnings = [];
   if (totalOutside > MAX_TOTAL_OUTSIDE_TIMES) {
     all.warnings.push({
-      code: 1, warning: "Item has been kept outside chilled storage " + totalOutside + " number of times. The maximum allowed number of outside stages is " +
+      code: 1, warning: "Item has been kept outside chilled storage " + totalOutside + " times. The maximum allowed number of outside stages is " +
         MAX_TOTAL_OUTSIDE_TIMES + " times."
     });
   }
