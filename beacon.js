@@ -71,19 +71,18 @@ var startTime;
 var totalReadings = 0;
 
 function readProbe() {
-  var t1, t2;
-  while (!t2) {
+  var t1;
+  while (!t1) {
     try {
       var ow = new OneWire(D1);
       var sensor = require("DS18B20").connect(ow);
-      while (!t1 || !t2) {
+      while (!t1) {
         t1 = sensor.getTemp();
-        t2 = sensor.getTemp();
       }
     } catch (err) {
     }
   }
-  return t2;
+  return t1;
 }
 
 var min_t = readProbe();
